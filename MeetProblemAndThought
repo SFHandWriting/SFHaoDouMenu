@@ -1,0 +1,44 @@
+遇到的问题以及思路
+  思路
+      1.》 找到资源，添加目前能想到的第三方库
+      2.》按照tabbar上的个数来创建各自的文件夹以及viewController来方便各自的实现
+                :菜谱页面
+                :到家页面
+                :广场页面
+                :我的页面
+      3.》搭建框架，创建引导界面
+
+  问题1：为什么明明赋值给了数据源，却在协议方法return cell那个方法里先传来一个空得数据源，然后又传来一个有值的数据源，
+  答1 ： 因为数据是异步请求是边搭建界面边解析数据，第一次传来的是空的数组（因为数据还没解析好），所以就崩溃了
+  问题2：先下载好数据再创建界面就可以解决问题1，但是为什么scrollview就没了，
+  答2：因为scrollview的显示是基于页面的创建成功，然而有了数据却没有显示的地方，当创建了tabbleView后，数据显示的方法已经执行完了不会再执行一遍，所以就没有显示scrollview
+  解决方法：针对问题1，2，后来想出在解析scrollview数据源前面解析每一个group的数据，解析玩group的数据后再创建tabbleView，然后再解析scrollview
+
+  问题3：要实现group1，button既要有image又要有title同时显示怎么办？
+        解决方法：
+           【setTitleEdgeInsets】
+       UIButton内有两个控件titleLabel和imageView，可以用来显示一个文本和图片，这里的图片区别于背景图片。给UIButton设置了title和image后，它们会图片在左边，文本在图片右边显示。它们两个做为一个整体依赖于button的contentHorizontalAlignment居左居右或居中显示。
+
+        1.当button.width < image.width时，只显示被压缩后的图片，图片是按fillXY的方式压缩。
+
+        2.当button.width > image.width，且 button.width < (image.width + text.width)时，图片正常显示，文本被压缩。
+
+        3.当button.width > (image.width + text.width),两者并列默认居中显示，可通过button的属性contentHorizontalAlignment改变对齐方式。
+
+        4.想两改变两个子控件的显示位置，可以分别通过setTitleEdgeInsets和setImageEdgeInsets来实现。需要注意的是，对titleLabel和imageView设置偏移，是针对它当前的位置起作用的，并不是针对它距离button边框的距离的。
+  问题4：用问题三的方法发现图片没有显示，但是有imageView，就是没有图片
+  答 ：原来是没有保留原色，所以图片上去了确实显示不了，只有蓝色。
+     处理图片，保留原色
+      - (UIImage *)originalImage:(UIImage *)image {
+        if ([UIDevice currentDevice].systemVersion.floatValue >= 7) {
+          image = [image imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];
+        }
+         return image;
+      }
+
+   问题5：在问题三的基础上发现问题3 的想法是错误的，image的大小比button的要大，所以要同时显示image和title是不现实的，那么又要有触发事件，又要有image和title，button又不可行
+   解决方法：将group1分为五个UIView，每个上面放imageView和label，这样他们的位置就很好控制，
+           点击事件：将手势tabgesture添加到每个UIView上，给每个UIView一个tag值
+
+
+
